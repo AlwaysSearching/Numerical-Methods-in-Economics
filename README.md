@@ -4,4 +4,5 @@ A Series of Jupyter Notebooks implementing and visualizing the various numerical
 The Notebooks currently depend on the following packages:
 - autograd
 - matplotlib
-- numpy 
+- numpy
+- plotly
