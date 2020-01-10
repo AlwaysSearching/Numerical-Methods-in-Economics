@@ -1,4 +1,7 @@
 from typing import Callable as func
+import numpy as np
+import plotly.graph_objects as go
+import warnings
 
 # Impliments a single iteration of the Bracketing algorithm found in Section 4.1 of Numerical Methods in Economics by Kenneth L. Judd.
 def one_iteration_bracketing(
@@ -123,3 +126,135 @@ def newton(
         x_0 = x_1
 
     return x_0, "Max iterations reached before given tolerance was met."
+
+
+def visualize_Newton(
+    x_i: float,
+    N: int,
+    f: func,
+    f_prime: func,
+    xlim: [float, float] = [-10, 10],
+    ylim: [float, float] = [-10, 10],
+):
+    """
+    Generates Interactive Plot using the plotly package to illustrate the mechanics of Newtons
+    Root Finding Method. Stops iterating the method if it diverges - fprime ~ 0. 
+
+    Parameters:
+        x_i: Starting Value for method.
+
+        N: Number of iterations to graph.
+
+        f: Function whose roots we are trying to find.
+
+        f_prime: First derivative of f. Passed as a callable function.
+
+        xlim: Range of the resulting plots x axis.
+
+        ylim: Range of the resulting plots y axis.
+
+    Returns:
+        Plotly Graph Object Figure.
+    """
+    # Create figure
+    fig = go.Figure()
+    x_i = float(x_i)  # Cast as float.
+    warnings.filterwarnings("ignore")  # Ignore the possible Divide by 0 error
+
+    # Create Layout for our Graph
+    fig.update_xaxes(zeroline=True, zerolinewidth=2, zerolinecolor="black")
+    fig.update_yaxes(zeroline=True, zerolinewidth=2, zerolinecolor="black")
+    fig.update_layout(
+        width=900,
+        height=600,
+        title="First " + str(N) + " Iterations of Newtons Method",
+        xaxis=dict(range=xlim),  # sets the range of xaxis
+        yaxis=dict(range=ylim),
+    )
+
+    x = np.linspace(xlim[0], xlim[1], 100)
+    y = f(x)
+
+    # Add traces, one for each slider step. Note that if the method diverges and the tangent line
+    # approaches a constant, then the graph of the tangent is no longer plotted.
+    for step in np.arange(0, N + 1):
+        y_tangent = f_prime(x_i) * (x - x_i) + f(x_i)
+
+        # Add Graph of Tangent Line
+        fig.add_trace(
+            go.Scatter(
+                visible=False,
+                line=dict(color="green", width=2),
+                name="Iteration " + str(step),
+                x=x,
+                y=y_tangent,
+            )
+        )
+        # Add Graph of Function
+        fig.add_trace(
+            go.Scatter(
+                visible=False,
+                line=dict(color="blue", width=3),
+                name="Main Function",
+                x=x,
+                y=y,
+            )
+        )
+        # Plot point [x_i, f(x_i)]
+        fig.add_trace(
+            go.Scatter(
+                visible=False,
+                marker=dict(color="green", line_width=0, size=15),
+                mode="markers",
+                name=r"$x_{{{i}}}$".format(i=step),
+                x=[x_i],
+                y=[f(x_i)],
+            )
+        )
+
+        if abs(f_prime(x_i)) > 1e-15:
+            x_i = x_i - f(x_i) / f_prime(x_i)
+            # Plot point [x_{i+1}, 0]
+            fig.add_trace(
+                go.Scatter(
+                    visible=False,
+                    marker=dict(color="red", line_width=0, size=15),
+                    mode="markers",
+                    name=r"$x_{{{i}}}$".format(i=step + 1),
+                    x=[x_i],
+                    y=[0],
+                )
+            )
+        else:
+            # Place holder for the sliders
+            fig.add_trace(go.Scatter())
+
+    # Make initial steps visible
+    fig.data[0].visible = True
+    fig.data[1].visible = True
+    fig.data[2].visible = True
+    fig.data[3].visible = True
+
+    # Create and add slider
+    steps = []
+    for i in range(N + 1):
+        # Set all frame visibilities to false
+        step = dict(method="restyle", args=["visible", [False] * len(fig.data)],)
+        # Set fames 4i to 4i+3 to be visible
+        step["args"][1][4 * i] = True
+        step["args"][1][4 * i + 1] = True
+        step["args"][1][4 * i + 2] = True
+        step["args"][1][4 * i + 3] = True
+        steps.append(step)
+
+    # Create the slider dictionary
+    sliders = [
+        dict(
+            active=0, currentvalue={"prefix": "Iteration: "}, pad={"t": 50}, steps=steps
+        )
+    ]
+
+    fig.update_layout(sliders=sliders)
+
+    warnings.filterwarnings("default")  # Reenable warnings
+    return fig
