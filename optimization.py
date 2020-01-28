@@ -138,7 +138,7 @@ def visualize_Newton(
 ):
     """
     Generates Interactive Plot using the plotly package to illustrate the mechanics of Newtons
-    Root Finding Method. Stops iterating the method if it diverges - fprime ~ 0. 
+    Root Finding Method. Stops iterating the method if it diverges - fprime ~ 0.
 
     Parameters:
         x_i: Starting Value for method.
@@ -165,7 +165,7 @@ def visualize_Newton(
     fig.update_xaxes(zeroline=True, zerolinewidth=2, zerolinecolor="black")
     fig.update_yaxes(zeroline=True, zerolinewidth=2, zerolinecolor="black")
     fig.update_layout(
-        width=900,
+        width=800,
         height=600,
         title="First " + str(N) + " Iterations of Newtons Method",
         xaxis=dict(range=xlim),  # sets the range of xaxis
